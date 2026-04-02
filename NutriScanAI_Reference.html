@@ -1,0 +1,2064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NutriScan AI — Code Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #181c24;
+    --border: #1e2430;
+    --border2: #252d3d;
+    --green: #27ae60;
+    --green-glow: rgba(39,174,96,0.18);
+    --green-dim: #1a5e38;
+    --blue: #3b82f6;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --purple: #a78bfa;
+    --cyan: #22d3ee;
+    --text: #e8edf5;
+    --text2: #8b95a8;
+    --text3: #525d70;
+    --code-bg: #0d1117;
+    --tag-agent: rgba(39,174,96,0.15);
+    --tag-util: rgba(59,130,246,0.15);
+    --tag-core: rgba(245,158,11,0.15);
+    --tag-ui: rgba(167,139,250,0.15);
+    --tag-db: rgba(34,211,238,0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* ── SIDEBAR ── */
+  #sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    position: sticky;
+    top: 0;
+  }
+
+  .sidebar-header {
+    padding: 20px 18px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    color: var(--text);
+  }
+  .logo span { color: var(--green); }
+
+  .sidebar-subtitle {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 3px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .search-wrap {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .search-wrap input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 7px;
+    padding: 7px 11px;
+    font-size: 12.5px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-wrap input:focus { border-color: var(--green); }
+  .search-wrap input::placeholder { color: var(--text3); }
+
+  .sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border2) transparent;
+  }
+
+  .nav-section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 10px 18px 4px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 18px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text2);
+    border-left: 2px solid transparent;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+  .nav-item.active {
+    color: var(--green);
+    border-left-color: var(--green);
+    background: var(--green-glow);
+  }
+
+  .nav-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 9.5px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.3px;
+    margin-left: auto;
+  }
+  .tag-agent { background: var(--tag-agent); color: var(--green); }
+  .tag-util  { background: var(--tag-util);  color: var(--blue); }
+  .tag-core  { background: var(--tag-core);  color: var(--amber); }
+  .tag-ui    { background: var(--tag-ui);    color: var(--purple); }
+  .tag-db    { background: var(--tag-db);    color: var(--cyan); }
+
+  /* ── MAIN ── */
+  #main {
+    flex: 1;
+    height: 100vh;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border2) transparent;
+  }
+
+  .main-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 40px 80px;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    margin-bottom: 40px;
+    padding: 32px 36px;
+    background: linear-gradient(135deg, var(--surface2) 0%, #0d1520 100%);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(39,174,96,0.1) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+  }
+  .hero-title span { color: var(--green); }
+  .hero-desc {
+    font-size: 14px;
+    color: var(--text2);
+    line-height: 1.7;
+    max-width: 580px;
+  }
+  .hero-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+  .hero-pill {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 99px;
+    border: 1px solid;
+  }
+  .hp-green { border-color: #27ae6060; color: var(--green); background: var(--green-glow); }
+  .hp-blue  { border-color: #3b82f640; color: var(--blue);  background: rgba(59,130,246,0.1); }
+  .hp-amber { border-color: #f59e0b40; color: var(--amber); background: rgba(245,158,11,0.1); }
+
+  /* ── PIPELINE DIAGRAM ── */
+  .pipeline {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 24px 0;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .pipe-node {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 9px;
+    padding: 10px 14px;
+    font-size: 11.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .pipe-node:hover { border-color: var(--green); color: var(--green); }
+  .pipe-node .pipe-num {
+    display: block;
+    font-size: 9px;
+    color: var(--text3);
+    font-weight: 400;
+    margin-bottom: 2px;
+  }
+  .pipe-arrow {
+    color: var(--text3);
+    font-size: 16px;
+    padding: 0 4px;
+    flex-shrink: 0;
+  }
+  .pipe-cond {
+    font-size: 9px;
+    color: var(--amber);
+    display: block;
+    margin-top: 2px;
+  }
+
+  /* ── FILE SECTIONS ── */
+  .file-section {
+    margin-bottom: 48px;
+    scroll-margin-top: 24px;
+  }
+
+  .file-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .file-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .file-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .file-path {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--text3);
+    margin-top: 1px;
+  }
+  .file-desc {
+    font-size: 13.5px;
+    color: var(--text2);
+    line-height: 1.7;
+    margin-bottom: 20px;
+    padding: 14px 16px;
+    background: var(--surface2);
+    border-left: 3px solid var(--green);
+    border-radius: 0 8px 8px 0;
+  }
+
+  /* ── LINE ENTRIES ── */
+  .line-entry {
+    margin-bottom: 10px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .line-entry:hover { border-color: var(--border2); }
+
+  .line-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    background: var(--surface);
+    user-select: none;
+  }
+  .line-header:hover { background: var(--surface2); }
+
+  .line-nums {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--text3);
+    padding-top: 2px;
+    flex-shrink: 0;
+    min-width: 50px;
+  }
+
+  .line-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--cyan);
+    flex: 1;
+    min-width: 0;
+    word-break: break-all;
+  }
+
+  .line-chevron {
+    color: var(--text3);
+    font-size: 12px;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+    margin-left: auto;
+    padding-top: 2px;
+  }
+  .line-entry.open .line-chevron { transform: rotate(90deg); }
+
+  .line-body {
+    display: none;
+    padding: 14px 16px 14px 78px;
+    background: var(--code-bg);
+    border-top: 1px solid var(--border);
+    font-size: 13.5px;
+    color: var(--text2);
+    line-height: 1.75;
+  }
+  .line-entry.open .line-body { display: block; }
+
+  .line-body code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    background: var(--surface2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--amber);
+  }
+
+  .line-body .note {
+    margin-top: 8px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12.5px;
+  }
+  .note-tip  { background: rgba(245,158,11,0.08); border-left: 2px solid var(--amber); color: #e8c06a; }
+  .note-warn { background: rgba(239,68,68,0.08);  border-left: 2px solid var(--red);   color: #f87171; }
+  .note-info { background: rgba(59,130,246,0.08); border-left: 2px solid var(--blue);  color: #93c5fd; }
+
+  /* ── BACK TO TOP ── */
+  #back-top {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    width: 42px; height: 42px;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 999;
+  }
+  #back-top.visible { opacity: 1; }
+
+  /* ── PROGRESS BAR ── */
+  #progress {
+    position: fixed;
+    top: 0; left: 280px; right: 0;
+    height: 2px;
+    background: var(--green);
+    transform-origin: left;
+    transform: scaleX(0);
+    z-index: 1000;
+    transition: transform 0.1s;
+  }
+
+  /* ── SCROLLBAR STYLE ── */
+  #main::-webkit-scrollbar { width: 5px; }
+  #main::-webkit-scrollbar-track { background: transparent; }
+  #main::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+  #sidebar .sidebar-nav::-webkit-scrollbar { width: 3px; }
+  #sidebar .sidebar-nav::-webkit-scrollbar-thumb { background: var(--border2); }
+
+  /* highlight matching search */
+  .nav-item.hidden { display: none; }
+
+  h3.section-group {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text3);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin: 32px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  h3.section-group::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<!-- ── SIDEBAR ── -->
+<div id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">Nutri<span>Scan</span> AI</div>
+    <div class="sidebar-subtitle">Code Reference Guide</div>
+  </div>
+  <div class="search-wrap">
+    <input type="text" id="search" placeholder="Search files…" oninput="filterNav(this.value)">
+  </div>
+  <div class="sidebar-nav" id="sidebarNav">
+    <div class="nav-section-label">Overview</div>
+    <div class="nav-item active" onclick="scrollTo('overview')" data-label="overview pipeline">
+      <div class="nav-dot" style="background:#27ae60"></div> Pipeline Overview
+    </div>
+
+    <div class="nav-section-label">Core App</div>
+    <div class="nav-item" onclick="scrollTo('app')" data-label="app.py entry point ui streamlit">
+      <div class="nav-dot" style="background:#f59e0b"></div> app.py <span class="tag tag-core">ENTRY</span>
+    </div>
+    <div class="nav-item" onclick="scrollTo('config')" data-label="config.py settings api keys">
+      <div class="nav-dot" style="background:#f59e0b"></div> config.py <span class="tag tag-core">CORE</span>
+    </div>
+    <div class="nav-item" onclick="scrollTo('state')" data-label="state.py langgraph schema typed">
+      <div class="nav-dot" style="background:#f59e0b"></div> state.py <span class="tag tag-core">CORE</span>
+    </div>
+    <div class="nav-item" onclick="scrollTo('graph')" data-label="graph.py pipeline langgraph dag">
+      <div class="nav-dot" style="background:#f59e0b"></div> graph.py <span class="tag tag-core">CORE</span>
+    </div>
+    <div class="nav-item" onclick="scrollTo('theme')" data-label="theme.py css styles dark light">
+      <div class="nav-dot" style="background:#f59e0b"></div> theme.py <span class="tag tag-ui">UI</span>
+    </div>
+
+    <div class="nav-section-label">Auth & Users</div>
+    <div class="nav-item" onclick="scrollTo('auth')" data-label="auth.py login register google oauth password">
+      <div class="nav-dot" style="background:#a78bfa"></div> auth.py <span class="tag tag-ui">AUTH</span>
+    </div>
+    <div class="nav-item" onclick="scrollTo('database')" data-label="database.py sqlite users scan history">
+      <div class="nav-dot" style="background:#22d3ee"></div> database.py <span class="tag tag-db">DB</span>
+    </div>
+    <div class="nav-item" onclick="scrollTo('profile')" data-label="profile.py edit name password avatar">
+      <div class="nav-dot" style="background:#a78bfa"></div> profile.py <span class="tag tag-ui">UI</span>
+    </div>
+
+    <div class="nav-section-label">Pages</div>
+    <div class="nav-item" onclick="scrollTo('dashboard')" data-label="dashboard.py charts analytics trends">
+      <div class="nav-dot" style="background:#a78bfa"></div> dashboard.py <span class="tag tag-ui">UI</span>
+    </div>
+    <div class="nav-item" onclick="scrollTo('notifications')" data-label="notifications.py email digest toast">
+      <div class="nav-dot" style="background:#a78bfa"></div> notifications.py <span class="tag tag-ui">UI</span>
+    </div>
+    <div class="nav-item" onclick="scrollTo('mailer')" data-label="mailer.py email smtp gmail reset">
+      <div class="nav-dot" style="background:#22d3ee"></div> mailer.py <span class="tag tag-db">EMAIL</span>
+    </div>
+
+    <div class="nav-section-label">AI Agents</div>
+    <div class="nav-item" onclick="scrollTo('agent1')" data-label="intake agent barcode ocr extraction">
+      <div class="nav-dot" style="background:#27ae60"></div> intake_agent.py <span class="tag tag-agent">A1</span>
+    </div>
+    <div class="nav-item" onclick="scrollTo('agent2')" data-label="lookup agent open food facts nutrition api">
+      <div class="nav-dot" style="background:#27ae60"></div> lookup_agent.py <span class="tag tag-agent">A2</span>
+    </div>
+    <div class="nav-item" onclick="scrollTo('agent3')" data-label="health agent score analysis groq llm">
+      <div class="nav-dot" style="background:#27ae60"></div> health_agent.py <span class="tag tag-agent">A3</span>
+    </div>
+    <div class="nav-item" onclick="scrollTo('agent4')" data-label="personalization agent user profile conditions">
+      <div class="nav-dot" style="background:#27ae60"></div> personalization_agent.py <span class="tag tag-agent">A4</span>
+    </div>
+    <div class="nav-item" onclick="scrollTo('agent5')" data-label="report agent generate docx download">
+      <div class="nav-dot" style="background:#27ae60"></div> report_agent.py <span class="tag tag-agent">A5</span>
+    </div>
+
+    <div class="nav-section-label">Utilities</div>
+    <div class="nav-item" onclick="scrollTo('barcode')" data-label="barcode_reader.py zxing decode ean upc">
+      <div class="nav-dot" style="background:#3b82f6"></div> barcode_reader.py <span class="tag tag-util">UTIL</span>
+    </div>
+    <div class="nav-item" onclick="scrollTo('ocr')" data-label="ocr_reader.py tesseract text extract">
+      <div class="nav-dot" style="background:#3b82f6"></div> ocr_reader.py <span class="tag tag-util">UTIL</span>
+    </div>
+    <div class="nav-item" onclick="scrollTo('nutrition_parser')" data-label="nutrition_parser.py regex parse values">
+      <div class="nav-dot" style="background:#3b82f6"></div> nutrition_parser.py <span class="tag tag-util">UTIL</span>
+    </div>
+    <div class="nav-item" onclick="scrollTo('image_utils')" data-label="image_utils.py resize preprocess pil">
+      <div class="nav-dot" style="background:#3b82f6"></div> image_utils.py <span class="tag tag-util">UTIL</span>
+    </div>
+    <div class="nav-item" onclick="scrollTo('error_handler')" data-label="error_handler.py safe agent decorator">
+      <div class="nav-dot" style="background:#3b82f6"></div> error_handler.py <span class="tag tag-util">UTIL</span>
+    </div>
+    <div class="nav-item" onclick="scrollTo('goupc')" data-label="goupc_client.py go-upc barcode product api">
+      <div class="nav-dot" style="background:#3b82f6"></div> goupc_client.py <span class="tag tag-util">UTIL</span>
+    </div>
+    <div class="nav-item" onclick="scrollTo('foodfacts')" data-label="food_facts_client.py open food facts wrapper">
+      <div class="nav-dot" style="background:#3b82f6"></div> food_facts_client.py <span class="tag tag-util">UTIL</span>
+    </div>
+    <div class="nav-item" onclick="scrollTo('exporter')" data-label="report_exporter.py docx download word">
+      <div class="nav-dot" style="background:#3b82f6"></div> report_exporter.py <span class="tag tag-util">UTIL</span>
+    </div>
+    <div class="nav-item" onclick="scrollTo('dbviewer')" data-label="db_viewer.py developer admin database">
+      <div class="nav-dot" style="background:#22d3ee"></div> db_viewer.py <span class="tag tag-db">DEV</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAIN ── -->
+<div id="main">
+<div class="main-inner">
+
+<!-- OVERVIEW -->
+<div class="file-section" id="overview">
+  <div class="hero">
+    <div class="hero-title">NutriScan <span>AI</span> — Code Reference</div>
+    <div class="hero-desc">
+      A Streamlit-based food nutrition analyzer powered by a 5-agent LangGraph pipeline. Upload a food product image or enter a barcode — the system extracts nutrition data, scores it against health guidelines, and personalizes results for your health profile.
+    </div>
+    <div class="hero-pills">
+      <span class="hero-pill hp-green">Python + Streamlit</span>
+      <span class="hero-pill hp-blue">LangGraph Pipeline</span>
+      <span class="hero-pill hp-amber">Groq LLM (Llama 3.1)</span>
+      <span class="hero-pill hp-green">SQLite Database</span>
+      <span class="hero-pill hp-blue">Go-UPC + Open Food Facts</span>
+    </div>
+  </div>
+
+  <h3 class="section-group">5-Agent Pipeline Flow</h3>
+  <div class="pipeline">
+    <div class="pipe-node" onclick="scrollTo('agent1')"><span class="pipe-num">Agent 1</span>Intake &amp; Extraction</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-node" onclick="scrollTo('agent2')"><span class="pipe-num">Agent 2</span>Nutrition Lookup</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-node" onclick="scrollTo('agent3')"><span class="pipe-num">Agent 3</span>Health Analysis</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-node" onclick="scrollTo('agent4')"><span class="pipe-num">Agent 4 <span class="pipe-cond">if profile</span></span>Personalization</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-node" onclick="scrollTo('agent5')"><span class="pipe-num">Agent 5</span>Report Generation</div>
+  </div>
+
+  <h3 class="section-group">How to Read This Guide</h3>
+  <div class="file-desc">
+    Click any entry below to expand it and see a plain-English explanation of what that line or block does. Use the sidebar to jump between files. The pipeline flows top-to-bottom: image/barcode → extract → lookup → analyze → personalize → report.
+  </div>
+</div>
+
+<!-- APP.PY -->
+<div class="file-section" id="app">
+  <div class="file-header">
+    <div class="file-icon" style="background:rgba(245,158,11,0.12)">🚀</div>
+    <div>
+      <div class="file-title">app.py</div>
+      <div class="file-path">NutriScanAI/app.py — Streamlit UI Entry Point</div>
+    </div>
+    <span class="tag tag-core" style="margin-left:auto">ENTRY POINT</span>
+  </div>
+  <div class="file-desc">This is the <strong>main file</strong> that Streamlit runs. It stitches together every other module: authentication, sidebar, user input, the AI pipeline, and the results display. Think of it as the "director" of the whole app.</div>
+
+  <!-- imports -->
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">1–22</div>
+      <div class="line-code">import streamlit as st … from graph import run_pipeline</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      These lines import all the libraries and local modules the app needs.<br><br>
+      <code>import streamlit as st</code> — loads Streamlit, the web framework that turns Python into an interactive web app.<br>
+      <code>from PIL import Image</code> — Python Imaging Library for loading/displaying images.<br>
+      <code>from auth import require_auth, render_user_widget, render_auth_page</code> — imports the login wall and user display from auth.py.<br>
+      <code>from database import save_scan, load_scans, delete_all_scans</code> — imports database read/write functions.<br>
+      <code>from graph import run_pipeline</code> — imports the function that triggers the 5-agent AI pipeline.<br>
+      <div class="note note-info">Every file that gets imported must be in the same folder (or a subfolder like <code>agents/</code> or <code>utils/</code>). If any import fails, the whole app crashes on startup.</div>
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">24–30</div>
+      <div class="line-code">st.set_page_config(page_title="NutriScan AI v2.0", page_icon=…, layout="wide")</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      <strong>This MUST be the very first Streamlit call in the file.</strong> Streamlit throws an error if you call anything else before this.<br><br>
+      <code>page_title</code> — sets the browser tab title.<br>
+      <code>page_icon</code> — sets the favicon (uses your logo PNG).<br>
+      <code>layout="wide"</code> — makes the app use the full browser width instead of a narrow centered column.<br>
+      <code>initial_sidebar_state="expanded"</code> — sidebar starts open.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">32–33</div>
+      <div class="line-code">if not require_auth(): st.stop()</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      <code>require_auth()</code> is called from auth.py. It checks if the user is logged in.<br>
+      — If <strong>NOT</strong> logged in → it renders the login page and returns <code>False</code>.<br>
+      — <code>st.stop()</code> halts the rest of the file from running, so the main app never shows.<br>
+      — If logged in → returns <code>True</code> and the rest of app.py continues loading.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">35–45</div>
+      <div class="line-code">if st.session_state.get("show_profile"): render_profile_page(); st.stop()</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      <strong>Page routing.</strong> Streamlit doesn't have built-in multi-page routing, so this project simulates it using session state flags.<br><br>
+      <code>st.session_state</code> is a dict that persists across reruns within the same session.<br>
+      <code>show_profile = True</code> → renders the profile edit page and stops.<br>
+      <code>show_dashboard = True</code> → renders the nutrition dashboard page and stops.<br>
+      If neither flag is set, the main scan page loads.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">47–59</div>
+      <div class="line-code">def _get_score_class(score) / _get_score_label(score) / _score_colour(score)</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Three small helper functions that map a numeric score (1–10) to visual styling:<br><br>
+      <code>_get_score_class()</code> → returns a CSS class name like <code>"score-excellent"</code> or <code>"score-poor"</code> for the score badge.<br>
+      <code>_get_score_label()</code> → returns a human label: "Excellent", "Good", "Moderate", "Poor", or "Avoid".<br>
+      <code>_score_colour()</code> → returns a hex color code used in scan history cards.<br>
+      <div class="note note-tip">Scoring thresholds: 8–10 = Excellent (green), 6–8 = Good (blue), 4–6 = Moderate (orange), 2–4 = Poor (dark orange), 0–2 = Avoid (red).</div>
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">62–130</div>
+      <div class="line-code">def _inject_theme(dark: bool): st.markdown(f"&lt;style&gt;…&lt;/style&gt;", unsafe_allow_html=True)</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      This function injects a big block of CSS into the Streamlit page using <code>st.markdown(unsafe_allow_html=True)</code>.<br><br>
+      It defines CSS variables for colors based on whether <code>dark=True</code> or <code>dark=False</code>.<br>
+      The CSS overrides Streamlit's default styling — hiding chrome elements, setting fonts, styling cards, buttons, badges, etc.<br>
+      <div class="note note-warn">This is a common Streamlit pattern for custom theming. <code>unsafe_allow_html=True</code> means Streamlit won't sanitize the HTML — necessary for styling but a potential XSS risk if the content came from user input.</div>
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~170–185</div>
+      <div class="line-code">if "scan_history" not in st.session_state: st.session_state.scan_history = []</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      <strong>Session state initialization.</strong> Streamlit re-runs the entire script from top to bottom on every user interaction. These checks ensure state variables are only initialized once (on first load), not reset every time.<br><br>
+      <code>scan_history</code> — list of recent scans shown in the sidebar.<br>
+      <code>dark_mode</code> — boolean; <code>True</code> = dark theme.<br>
+      <code>live_barcode</code> — holds the barcode detected by the live JS scanner.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~200–225</div>
+      <div class="line-code">def _add_to_history(report_data): save_scan(email, report_data); st.session_state.scan_history = load_scans(email)</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      After every successful scan, this function is called to save it and refresh the sidebar list.<br><br>
+      <code>save_scan(email, report_data)</code> — writes the scan to the SQLite database (database.py handles deduplication).<br>
+      <code>load_scans(email)</code> — reloads the latest 5 scans from the DB to keep the sidebar in sync with the database (not just in-memory state).<br>
+      <div class="note note-info">If the user is not logged in (rare edge case), it falls back to in-memory storage limited to 5 items.</div>
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~228–310</div>
+      <div class="line-code">with st.sidebar: render_user_widget() … st.subheader("Your Health Profile")</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Everything inside <code>with st.sidebar:</code> is rendered in the left sidebar panel.<br><br>
+      <code>render_user_widget()</code> — shows the logged-in user's name, email, avatar, and sign-out button.<br>
+      Navigation buttons for Dashboard and Profile use <code>st.session_state</code> flags + <code>st.rerun()</code> to simulate page changes.<br>
+      The health profile form (age, gender, conditions, dietary preferences, fitness goal) collects data into a <code>user_profile</code> dict that gets passed to the AI pipeline for personalization.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~320–420</div>
+      <div class="line-code">def _live_scanner_html(dark): return "…HTML/JS…"</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      This function returns a full HTML page as a Python string — a self-contained live barcode scanner built with the <strong>ZXing-JS</strong> library.<br><br>
+      It uses the browser's camera API (<code>getUserMedia</code>) to open the rear-facing camera, then reads frames using <code>requestAnimationFrame</code>, decodes barcodes with ZXing, and sends the result back to Streamlit via <code>window.parent.postMessage</code>.<br>
+      <div class="note note-tip">This is injected into the page using <code>components.html()</code> from <code>streamlit.components.v1</code>, which renders arbitrary HTML/JS in an iframe.</div>
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~422–490</div>
+      <div class="line-code">input_mode = st.radio("Choose input method", ["Upload Image", "Enter Barcode Manually"])</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      The main input panel lets users choose how to provide the product:<br><br>
+      <strong>Upload Image</strong> — <code>st.file_uploader()</code> accepts JPG/PNG/WebP. Returns bytes via <code>.getvalue()</code>.<br>
+      <strong>Enter Barcode Manually</strong> — <code>st.text_input()</code> with validation: must be 8–14 digits only.<br>
+      <strong>Live Scan</strong> (commented out in nav) — renders the JS scanner component.<br>
+      <div class="note note-info">The input variables <code>image_bytes</code> and <code>manual_barcode</code> are passed to <code>run_pipeline()</code> when the Analyse button is clicked.</div>
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~510–570</div>
+      <div class="line-code">if analyse_clicked and (image_bytes or manual_barcode): … final_state = run_pipeline(…)</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      <strong>This is where the AI pipeline gets triggered.</strong><br><br>
+      After validating the image bytes, it shows a fake progress bar (for UX — the actual work happens in the spinner).<br>
+      <code>run_pipeline(image_bytes, user_profile, manual_barcode)</code> invokes the 5-agent LangGraph pipeline from graph.py.<br>
+      <code>check_pipeline_health(final_state)</code> inspects the returned state for errors and shows warnings if any agent failed.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~575–680</div>
+      <div class="line-code">report_data = final_state.get("report_data", {}) … st.markdown(score_badge, unsafe_allow_html=True)</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      The results rendering section. It reads fields from <code>report_data</code> (built by Agent 5) and renders:<br><br>
+      • Product name, barcode, Nutri-Score, NOVA group, product image<br>
+      • Score badge with gradient color and label<br>
+      • Consumption frequency pill<br>
+      • Nutrition table with daily value progress bars (9 nutrients, 3 columns)<br>
+      • Red flags / positives insight cards<br>
+      • Personalized warnings & tips (only if profile was provided)<br>
+      • Allergens & flagged additives<br>
+      • Narrative summary paragraph from the LLM
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~690–715</div>
+      <div class="line-code">from exports.report_exporter import generate_docx … st.download_button("📄 Download Report")</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      After the results, a download button appears.<br><br>
+      <code>generate_docx(report_data, final_report_text)</code> returns raw .docx bytes.<br>
+      <code>st.download_button()</code> creates a button that sends those bytes to the browser as a file download.<br>
+      The filename is auto-generated from the product name.
+    </div>
+  </div>
+</div>
+
+<!-- CONFIG.PY -->
+<div class="file-section" id="config">
+  <div class="file-header">
+    <div class="file-icon" style="background:rgba(245,158,11,0.12)">⚙️</div>
+    <div>
+      <div class="file-title">config.py</div>
+      <div class="file-path">NutriScanAI/config.py — App Configuration</div>
+    </div>
+    <span class="tag tag-core" style="margin-left:auto">CORE</span>
+  </div>
+  <div class="file-desc">Loads all environment variables and API keys from the .env file. Every other module imports constants from here instead of reading the environment directly.</div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">5</div>
+      <div class="line-code">load_dotenv()</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Reads the <code>.env</code> file from disk and loads its contents into environment variables. After this call, <code>os.getenv("GROQ_API_KEY")</code> will return the value set in <code>.env</code>. Without this call, those variables would be <code>None</code>.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">8–9</div>
+      <div class="line-code">GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Reads the Groq API key. The second argument <code>""</code> is the default if the variable isn't set — it avoids crashing on startup, but <code>validate_config()</code> will catch it and raise a clear error.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">16–20</div>
+      <div class="line-code">GROQ_MODEL = "llama-3.1-8b-instant" / GROQ_MAX_TOKENS = 1500</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Sets which Groq model to use and how much output to allow per request.<br><br>
+      <code>llama-3.1-8b-instant</code> — a fast, lightweight model on Groq's free tier.<br>
+      <code>GROQ_MAX_TOKENS = 1500</code> — caps the response length to save API quota.<br>
+      <code>GROQ_TEMPERATURE = 0.3</code> — low temperature = more focused, deterministic output (good for structured JSON responses).
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">31–40</div>
+      <div class="line-code">def validate_config(): if not GROQ_API_KEY: raise EnvironmentError(…)</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Called at app startup from app.py. If the Groq API key is missing, it raises an <code>EnvironmentError</code> with helpful setup instructions. The <code>try/except</code> in app.py catches this and shows a friendly error message instead of crashing.
+    </div>
+  </div>
+</div>
+
+<!-- STATE.PY -->
+<div class="file-section" id="state">
+  <div class="file-header">
+    <div class="file-icon" style="background:rgba(245,158,11,0.12)">📋</div>
+    <div>
+      <div class="file-title">state.py</div>
+      <div class="file-path">NutriScanAI/state.py — LangGraph Shared State Schema</div>
+    </div>
+    <span class="tag tag-core" style="margin-left:auto">CORE</span>
+  </div>
+  <div class="file-desc">Defines the single "state dictionary" that flows through all 5 agents like a baton in a relay race. Each agent reads fields from it and writes new ones back. <code>total=False</code> means every field is optional — agents only populate what they know.</div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">9–12</div>
+      <div class="line-code">class NutriScanState(TypedDict, total=False):</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      <code>TypedDict</code> is a Python type hint construct. It defines a dict with named, typed fields — like a struct in other languages. LangGraph uses this as the contract between agents.<br><br>
+      <code>total=False</code> means all fields are optional — you don't have to provide every field when creating a state. This is important because Agent 1 can't know Agent 5's fields yet.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">14–30</div>
+      <div class="line-code">raw_image_bytes / barcode_number / ocr_text / nutrition_raw / extraction_confidence</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      <strong>Agent 1 fields</strong> — populated by the Intake Agent:<br><br>
+      <code>raw_image_bytes</code> — the raw image bytes uploaded by the user.<br>
+      <code>barcode_number</code> — decoded barcode string (e.g. "8901030868702"), or None if not found.<br>
+      <code>ocr_text</code> — raw text extracted by Tesseract OCR (used when no barcode found).<br>
+      <code>nutrition_raw</code> — structured dict parsed from OCR (keys like <code>energy_kcal</code>, <code>protein</code>, etc.).<br>
+      <code>extraction_confidence</code> — 0.0–1.0 score of how complete the extracted data is.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">32–48</div>
+      <div class="line-code">nutrition_enriched / product_image_url / nova_group / nutri_score / allergens</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      <strong>Agent 2 fields</strong> — populated by the Nutrition Lookup Agent:<br><br>
+      <code>nutrition_enriched</code> — merged dict combining OCR data + API data (API wins on conflicts).<br>
+      <code>product_image_url</code> — product photo URL from the product database.<br>
+      <code>nova_group</code> — 1–4 processing level (4 = ultra-processed).<br>
+      <code>nutri_score</code> — A–E letter grade from European nutrition scoring.<br>
+      <code>allergens</code> — list of allergens detected in the product.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">50–65</div>
+      <div class="line-code">health_score / consumption_frequency / red_flags / positives / health_summary</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      <strong>Agent 3 fields</strong> — output from the Health Analysis Agent (via Groq LLM):<br><br>
+      <code>health_score</code> — 1.0–10.0 general score not yet personalized.<br>
+      <code>consumption_frequency</code> — "daily" / "a few times a week" / "weekly" / "occasional" / "avoid".<br>
+      <code>red_flags</code> — list of specific concerns (e.g. "Sodium is 42% of daily value").<br>
+      <code>positives</code> — list of nutritional benefits.<br>
+      <code>health_summary</code> — 2–3 sentence plain-English summary.
+    </div>
+  </div>
+</div>
+
+<!-- GRAPH.PY -->
+<div class="file-section" id="graph">
+  <div class="file-header">
+    <div class="file-icon" style="background:rgba(245,158,11,0.12)">🔗</div>
+    <div>
+      <div class="file-title">graph.py</div>
+      <div class="file-path">NutriScanAI/graph.py — LangGraph Pipeline Definition</div>
+    </div>
+    <span class="tag tag-core" style="margin-left:auto">PIPELINE</span>
+  </div>
+  <div class="file-desc">Builds the directed graph (DAG) that connects all 5 agents. Defines which agent runs after which, and includes one conditional branch: if the user has a health profile, route to Agent 4; otherwise skip straight to Agent 5.</div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">28–38</div>
+      <div class="line-code">def should_personalize(state): return NODE_PERSONALIZATION or NODE_REPORT</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      This is the <strong>routing function</strong> — a conditional edge decision in LangGraph.<br><br>
+      It reads <code>user_profile</code> from state. If any profile field has a value → returns the node name for Agent 4 (Personalization). If empty → jumps straight to Agent 5 (Report).<br>
+      This means users without a health profile still get a full report, just without personalized warnings.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">41–75</div>
+      <div class="line-code">def build_graph(): graph = StateGraph(NutriScanState); graph.add_node(…); graph.add_edge(…)</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Constructs the LangGraph pipeline:<br><br>
+      <code>StateGraph(NutriScanState)</code> — creates a new graph using our state schema.<br>
+      <code>graph.add_node(name, function)</code> — registers each agent's run function as a named node.<br>
+      <code>graph.set_entry_point(NODE_INTAKE)</code> — Agent 1 always runs first.<br>
+      <code>graph.add_edge(A, B)</code> — adds a fixed connection (A always goes to B).<br>
+      <code>graph.add_conditional_edges(NODE_HEALTH, should_personalize, {…})</code> — adds the routing branch after Agent 3.<br>
+      <code>graph.compile()</code> — validates the graph and prepares it for execution.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">88–118</div>
+      <div class="line-code">def run_pipeline(image_bytes, user_profile, manual_barcode) → NutriScanState</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      The public function called by app.py. It:<br>
+      1. Builds the initial state dict with <code>raw_image_bytes</code>, <code>user_profile</code>, and an empty <code>pipeline_errors</code> list.<br>
+      2. If a manual barcode was typed, injects it directly into state so Agent 1 skips image processing entirely.<br>
+      3. Calls <code>nutriscan_graph.invoke(initial_state)</code> — this runs all agents sequentially and returns the final state.<br>
+      <div class="note note-tip"><code>invoke()</code> is a LangGraph method that executes the full pipeline synchronously and returns the final accumulated state.</div>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH.PY -->
+<div class="file-section" id="auth">
+  <div class="file-header">
+    <div class="file-icon" style="background:rgba(167,139,250,0.12)">🔐</div>
+    <div>
+      <div class="file-title">auth.py</div>
+      <div class="file-path">NutriScanAI/auth.py — Authentication Gate</div>
+    </div>
+    <span class="tag tag-ui" style="margin-left:auto">AUTH</span>
+  </div>
+  <div class="file-desc">Handles all login, registration, and Google OAuth flows. If the user is not logged in, it renders a two-column auth page (brand left, form right) and blocks the rest of the app from loading.</div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~60–80</div>
+      <div class="line-code">def _google_auth_url() → str: … return OAuth2 redirect URL</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Builds the Google OAuth2 authorization URL. When clicked, it redirects the user to Google's sign-in page.<br><br>
+      It reads <code>GOOGLE_CLIENT_ID</code> and <code>GOOGLE_REDIRECT_URI</code> from Streamlit secrets (<code>.streamlit/secrets.toml</code>).<br>
+      The URL includes scopes for <code>openid</code>, <code>email</code>, and <code>profile</code> — the minimum needed to identify the user.<br>
+      <div class="note note-info">This feature is currently commented out in the UI but the backend code is fully implemented.</div>
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~83–115</div>
+      <div class="line-code">def _exchange_google_code(code) → dict: … requests.post(token endpoint)</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      After Google redirects back with a <code>?code=</code> in the URL, this function:<br>
+      1. POSTs the code to Google's token endpoint to get an access token.<br>
+      2. Uses the access token to fetch user info (email, name, picture) from Google's userinfo API.<br>
+      Returns a dict like <code>{"email": "…", "name": "…", "picture": "…"}</code>.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~118–145</div>
+      <div class="line-code">def _handle_google_callback(): params = st.query_params; code = params.get("code")</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Called on every page load. Checks if <code>?code=</code> is in the URL (which only happens right after a Google redirect).<br><br>
+      If code is found: exchanges it for user info, auto-creates the user in the database if it's their first login, sets <code>st.session_state.authenticated = True</code>, and calls <code>st.rerun()</code> to reload the app as a logged-in user.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~245–320</div>
+      <div class="line-code">def render_auth_page(): brand_col, form_col = st.columns([1.0, 1.0])</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Renders the full login/register UI in a two-column layout.<br><br>
+      The left column shows the brand panel (logo, feature list).<br>
+      The right column shows a tab strip (Sign in / Create account) and the relevant form.<br>
+      Tab switching is done via <code>?tab=login</code> / <code>?tab=register</code> URL query params — clicking the HTML anchor tags updates the URL, which triggers Streamlit to rerun and switch the displayed form.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~345–380</div>
+      <div class="line-code">def _do_login(email, password): … verify_password() … st.session_state.authenticated = True</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Handles the login form submission:<br><br>
+      1. Validates email format with a regex check.<br>
+      2. Calls <code>verify_password(email, password)</code> from database.py (compares SHA-256 hash).<br>
+      3. On failure: adds a 0.4 second delay (brute-force protection) and shows an error.<br>
+      4. On success: sets <code>authenticated = True</code>, stores user info in session state, loads scan history from DB, calls <code>st.rerun()</code>.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~437–455</div>
+      <div class="line-code">def _do_forgot(email): token = create_reset_token(email); send_reset_email(email, token)</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Password reset flow:<br>
+      1. Creates a secure random token (32 bytes URL-safe) in the database, expires in 30 minutes.<br>
+      2. Sends an email with the reset link via Gmail SMTP (mailer.py).<br>
+      3. Always shows the same success message whether the email exists or not — this prevents email enumeration attacks.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~510–545</div>
+      <div class="line-code">def require_auth() → bool: if _handle_reset_token(): return False; …</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      The main gate function called in app.py. Returns <code>True</code> if authenticated, <code>False</code> if not.<br><br>
+      Priority order:<br>
+      1. Check for password reset link first (intercepts before auth check).<br>
+      2. If already authenticated → reload scan history from DB and return True.<br>
+      3. Otherwise → render the auth page and return False.
+    </div>
+  </div>
+</div>
+
+<!-- DATABASE.PY -->
+<div class="file-section" id="database">
+  <div class="file-header">
+    <div class="file-icon" style="background:rgba(34,211,238,0.12)">🗄️</div>
+    <div>
+      <div class="file-title">database.py</div>
+      <div class="file-path">NutriScanAI/database.py — SQLite Persistence Layer</div>
+    </div>
+    <span class="tag tag-db" style="margin-left:auto">DATABASE</span>
+  </div>
+  <div class="file-desc">Manages the SQLite database with 3 tables: <code>users</code>, <code>scan_history</code>, and <code>reset_tokens</code>. Uses a context manager for safe connections and WAL mode for concurrent access.</div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">28–42</div>
+      <div class="line-code">@contextmanager def _get_conn(): conn = sqlite3.connect(DB_PATH, check_same_thread=False)</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      A Python context manager that handles the database connection lifecycle safely.<br><br>
+      <code>check_same_thread=False</code> — allows the connection to be used from multiple Streamlit threads.<br>
+      <code>conn.row_factory = sqlite3.Row</code> — makes query results accessible by column name (e.g. <code>row["email"]</code>) instead of index.<br>
+      <code>PRAGMA journal_mode=WAL</code> — Write-Ahead Logging mode: safer for multiple concurrent Streamlit sessions accessing the same DB.<br>
+      <code>conn.rollback()</code> on exception — automatically undoes any partial writes if something goes wrong.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">45–90</div>
+      <div class="line-code">def init_db(): conn.executescript("CREATE TABLE IF NOT EXISTS users (…)")</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Creates all tables on first run. <code>CREATE TABLE IF NOT EXISTS</code> means it's safe to call on every startup — it does nothing if tables already exist.<br><br>
+      <code>users</code> table: email (unique), name, password_hash (SHA-256, NULL for Google users), avatar_url, timestamps.<br>
+      <code>scan_history</code> table: links to user by email, stores product_name, score, frequency, barcode, the full report as JSON, timestamp.<br>
+      <code>reset_tokens</code> table: stores password reset tokens with expiry times.<br>
+      After creating tables, seeds the demo account (<code>demo@nutriscan.ai</code> / <code>demo1234</code>).
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~100</div>
+      <div class="line-code">def _hash(password: str) → str: return hashlib.sha256(password.encode()).hexdigest()</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Hashes passwords using SHA-256 before storing. This means the actual password is never saved — only its hash.<br><br>
+      <div class="note note-warn">SHA-256 without salt is not considered best practice for production apps (bcrypt or Argon2 would be better), but it's acceptable for a project/demo app.</div>
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~170–200</div>
+      <div class="line-code">def save_scan(email, report_data): … conn.execute("INSERT INTO scan_history …") … DELETE LIMIT</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Saves a scan result to the database.<br><br>
+      First checks for duplicate: if the last scan had the same barcode, it skips insertion (prevents saving the same product twice from a double-click).<br>
+      The full <code>report_data</code> dict is serialized to JSON and stored in the <code>report_json</code> column — useful for future "view full history" features.<br>
+      After inserting, it prunes old entries using a subquery that keeps only the most recent 50 rows per user.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~202–240</div>
+      <div class="line-code">def load_scans(email, limit=5) → list[dict]:</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Returns the most recent <code>limit</code> scans for a user, formatted for display in the sidebar.<br><br>
+      Parses the stored ISO datetime string and reformats it to <code>"HH:MM"</code> for the time display and <code>"DD Mon"</code> for the date display.<br>
+      Also deserializes the stored <code>report_json</code> back into a dict and includes it as <code>report_data</code> key for future detail view use.
+    </div>
+  </div>
+</div>
+
+<!-- AGENT 1 -->
+<div class="file-section" id="agent1">
+  <div class="file-header">
+    <div class="file-icon" style="background:rgba(39,174,96,0.12)">📸</div>
+    <div>
+      <div class="file-title">intake_agent.py</div>
+      <div class="file-path">NutriScanAI/agents/intake_agent.py — Agent 1: Intake & Extraction</div>
+    </div>
+    <span class="tag tag-agent" style="margin-left:auto">AGENT 1</span>
+  </div>
+  <div class="file-desc">The first agent in the pipeline. Takes the raw image, tries to find a barcode, and if no barcode is found, falls back to OCR text extraction. Populates the "extraction" fields in state.</div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">20–22</div>
+      <div class="line-code">@safe_agent("Agent 1 (Intake)") def run_intake_agent(state): …</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      The <code>@safe_agent</code> decorator (from error_handler.py) wraps this function in a try/except. If anything crashes inside, it catches the error, appends it to <code>state["pipeline_errors"]</code>, and returns the state unchanged — so the pipeline continues instead of crashing completely.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">25–27</div>
+      <div class="line-code">if state.get("barcode_number") and state.get("nutrition_raw") is not None: return state</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      <strong>Shortcut for manual barcode entry.</strong> If the user typed a barcode manually, <code>run_pipeline()</code> in graph.py already injected <code>barcode_number</code> and <code>nutrition_raw</code> into the initial state. This check detects that and skips all image processing entirely.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">46–55</div>
+      <div class="line-code">barcode_number = decode_barcode(image); if barcode_number and is_valid_food_barcode(…):</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Tries to decode a barcode from the image using the 6-strategy fallback in barcode_reader.py.<br><br>
+      <code>is_valid_food_barcode()</code> filters out garbage decode results — only accepts 8–14 digit strings. If a valid barcode is found, <code>nutrition_raw</code> is set to a minimal dict (just the barcode); Agent 2 will fetch the full product data from the API.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">59–80</div>
+      <div class="line-code">ocr_text = extract_text_best(image); if not is_nutrition_label(ocr_text): errors.append(…)</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      <strong>OCR fallback path</strong> — only reached if no valid barcode was found.<br><br>
+      <code>extract_text_best()</code> runs Tesseract twice (preprocessed and raw) and returns whichever gives more text.<br>
+      <code>is_nutrition_label()</code> checks if 3+ nutrition keywords appear in the text — "protein", "sodium", "energy", etc. If not, the image probably isn't a nutrition label.<br>
+      <code>parse_nutrition_from_text()</code> uses regex patterns to extract numeric values from the OCR text.
+    </div>
+  </div>
+</div>
+
+<!-- AGENT 2 -->
+<div class="file-section" id="agent2">
+  <div class="file-header">
+    <div class="file-icon" style="background:rgba(39,174,96,0.12)">🔍</div>
+    <div>
+      <div class="file-title">lookup_agent.py</div>
+      <div class="file-path">NutriScanAI/agents/lookup_agent.py — Agent 2: Nutrition Lookup</div>
+    </div>
+    <span class="tag tag-agent" style="margin-left:auto">AGENT 2</span>
+  </div>
+  <div class="file-desc">Looks up the product using Go-UPC to get the product name and image, then asks the Groq LLM to estimate nutrition values. If no barcode was found, uses the OCR data directly.</div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~100–135</div>
+      <div class="line-code">def _llm_nutrition_fallback(product_name, barcode) → dict: … client.chat.completions.create(…)</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      When no nutrition data is available from an API, this asks Groq's LLM to estimate nutrition values.<br><br>
+      The prompt instructs the LLM to only provide values it's confident about (setting uncertain fields to <code>null</code>).<br>
+      <code>_repair_json(raw)</code> handles cases where the LLM response is truncated by the token limit — it tries multiple strategies to recover a valid JSON object.<br>
+      Any LLM-estimated results are marked with <code>"llm_estimated": True</code> so the UI can show an "AI Estimated" badge.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~50–95</div>
+      <div class="line-code">def _repair_json(text) → dict: … re.sub(r',\s*"[^"]*":\s*[^,}]*$', '', text)</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      A robust JSON repair function for handling truncated LLM output.<br><br>
+      Strategy 1: strip markdown code fences, try direct parse.<br>
+      Strategy 2: remove the last incomplete key-value pair (regex cuts off trailing incomplete JSON).<br>
+      Strategy 3: try common closing characters.<br>
+      Strategy 4: extract known numeric fields using regex directly from the raw text.<br>
+      Returns an empty dict only if all strategies fail.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~155–175</div>
+      <div class="line-code">def _flag_additives_from_text(ingredients_text) → list: re.findall(r"\b(e\d{3,4}[a-z]?)\b"…)</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Scans the ingredients text for E-number food additives (like E621 = MSG, E250 = sodium nitrite).<br><br>
+      Uses a regex to find patterns like "E621", "E102", "e211", etc.<br>
+      Compares found codes against a hardcoded list of concerning additives (<code>CONCERNING_ADDITIVE_PREFIXES</code>).<br>
+      Returns a list like <code>["E621", "E211"]</code> — shown as warnings in the results.
+    </div>
+  </div>
+</div>
+
+<!-- AGENT 3 -->
+<div class="file-section" id="agent3">
+  <div class="file-header">
+    <div class="file-icon" style="background:rgba(39,174,96,0.12)">🩺</div>
+    <div>
+      <div class="file-title">health_agent.py</div>
+      <div class="file-path">NutriScanAI/agents/health_agent.py — Agent 3: Health Analysis</div>
+    </div>
+    <span class="tag tag-agent" style="margin-left:auto">AGENT 3</span>
+  </div>
+  <div class="file-desc">The core AI analysis step. Sends the enriched nutrition profile to Groq (Llama 3.1) with a detailed prompt, and receives back a structured JSON health assessment: score, frequency, red flags, positives, and summary.</div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~65–95</div>
+      <div class="line-code">def _build_health_prompt(nutrition_summary) → str: "…JSON format instructions…"</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      The prompt tells the LLM exactly what to analyze and in what format to respond.<br><br>
+      It specifies the scoring guide (8–10 = Excellent, etc.), tells the model to base analysis on WHO and FSSAI (Indian food safety) guidelines, and instructs it to respond with only a JSON object — no preamble, no markdown, no extra text.<br>
+      <div class="note note-tip">Strict JSON-only instructions are critical. Without them, LLMs often add "Sure! Here's the analysis:" before the JSON, which breaks parsing.</div>
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~50–63</div>
+      <div class="line-code">response = client.chat.completions.create(model=GROQ_MODEL, …); raw_text = response.choices[0].message.content</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Calls the Groq API with the prompt. The response structure is:<br><br>
+      <code>response.choices[0]</code> — the first (and usually only) completion choice.<br>
+      <code>.message.content</code> — the actual text the model generated.<br>
+      <code>.strip()</code> — removes any leading/trailing whitespace from the response.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~115–135</div>
+      <div class="line-code">def _parse_response(raw_text) → dict: clean = raw_text.lstrip("```json"); json.loads(clean)</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Parses the LLM's JSON response with graceful fallback.<br><br>
+      Strips markdown code fences that LLMs sometimes add despite instructions.<br>
+      Clamps the health score to the valid range (1.0–10.0) regardless of what the model returns.<br>
+      If JSON parsing completely fails, returns safe default values so the pipeline continues without crashing.
+    </div>
+  </div>
+</div>
+
+<!-- AGENT 4 -->
+<div class="file-section" id="agent4">
+  <div class="file-header">
+    <div class="file-icon" style="background:rgba(39,174,96,0.12)">👤</div>
+    <div>
+      <div class="file-title">personalization_agent.py</div>
+      <div class="file-path">NutriScanAI/agents/personalization_agent.py — Agent 4: Personalization</div>
+    </div>
+    <span class="tag tag-agent" style="margin-left:auto">AGENT 4</span>
+  </div>
+  <div class="file-desc">Only runs if the user has a health profile. Re-evaluates the product specifically for that user's conditions (diabetes, hypertension, etc.) and adjusts the score, frequency, and adds condition-specific warnings.</div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~75–110</div>
+      <div class="line-code">def _build_personalization_prompt(nutrition, profile, general_analysis) → str:</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Builds a prompt that includes three pieces of context:<br><br>
+      1. The product's full nutrition data.<br>
+      2. The general health analysis already done by Agent 3 (score, red flags, positives).<br>
+      3. The user's health profile (age, conditions like "Type 2 Diabetes", dietary restrictions, fitness goals).<br>
+      The LLM's job is to re-score the product <em>for this specific person</em> — e.g., a product with 18g sugar rated "Good" generally might be rated "Avoid" for a diabetic user.
+    </div>
+  </div>
+</div>
+
+<!-- AGENT 5 -->
+<div class="file-section" id="agent5">
+  <div class="file-header">
+    <div class="file-icon" style="background:rgba(39,174,96,0.12)">📄</div>
+    <div>
+      <div class="file-title">report_agent.py</div>
+      <div class="file-path">NutriScanAI/agents/report_agent.py — Agent 5: Report Generation</div>
+    </div>
+    <span class="tag tag-agent" style="margin-left:auto">AGENT 5</span>
+  </div>
+  <div class="file-desc">The final agent. Compiles all previous outputs into a polished report. Generates a narrative paragraph via LLM, builds the structured report_data dict for Streamlit UI rendering, and creates a plain-text version for download.</div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~30–45</div>
+      <div class="line-code">display_score = state.get("personalized_score") or state.get("health_score")</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Determines which score to show. If a personalized score exists (Agent 4 ran), that takes priority over the general score. This single line drives the "personalized" vs "general" display throughout the UI.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~95–130</div>
+      <div class="line-code">def _build_nutrition_table(nutrition) → list[dict]: fields = [("energy_kcal", "Energy", "kcal"), …]</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Converts the raw nutrition dict into a list of <code>{"label", "value", "unit"}</code> dicts — the format expected by app.py's progress bar rendering loop.<br><br>
+      Only includes fields where a value actually exists (skips <code>None</code> fields). This prevents showing empty rows in the nutrition table.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~155–190</div>
+      <div class="line-code">def _extract_plain_narrative(text) → str: if stripped.startswith("{"): try json.loads(stripped)</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      A defensive function that ensures the narrative is plain prose, not JSON.<br><br>
+      Despite being told to write flowing paragraphs, LLMs sometimes return JSON anyway. This function detects a JSON response and extracts all string values from it, joining them into a readable narrative.<br>
+      Also strips any remaining markdown artifacts like triple backticks.
+    </div>
+  </div>
+</div>
+
+<!-- BARCODE READER -->
+<div class="file-section" id="barcode">
+  <div class="file-header">
+    <div class="file-icon" style="background:rgba(59,130,246,0.12)">📊</div>
+    <div>
+      <div class="file-title">barcode_reader.py</div>
+      <div class="file-path">NutriScanAI/utils/barcode_reader.py</div>
+    </div>
+    <span class="tag tag-util" style="margin-left:auto">UTIL</span>
+  </div>
+  <div class="file-desc">Detects and decodes barcodes from images using the zxing-cpp library. Uses a 6-strategy fallback (different scales, greyscale, contrast boost) to maximize detection rate on real-world product photos.</div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">16–55</div>
+      <div class="line-code">def decode_barcode(image) → Optional[str]: … 6 attempts with different preprocessing</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Tries 6 different strategies to read a barcode:<br><br>
+      1. <strong>2x upscale + 60px white padding</strong> — fastest reliable path for most phone photos.<br>
+      2. <strong>2x greyscale + padding</strong> — handles color images that confuse the decoder.<br>
+      3. <strong>3x upscale + 80px padding</strong> — for small/low-resolution barcodes.<br>
+      4. <strong>Contrast boost (2x) + padding</strong> — for faded or low-contrast barcodes.<br>
+      5. <strong>Original + 60px padding only</strong> — high-res images that don't need scaling.<br>
+      6. <strong>4x upscale + 100px padding</strong> — last resort for very small barcodes.<br>
+      <div class="note note-tip">White padding is added because barcodes need a "quiet zone" (blank space) around them to decode correctly. Tightly cropped photos often fail without it.</div>
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">57–73</div>
+      <div class="line-code">def _to_rgb(image) → Image: if image.mode in ("RGBA", "LA"): background.paste(image, mask=…)</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Converts any image mode to RGB before processing. This is critical — zxingcpp silently fails on RGBA images (it returns no results without any error).<br><br>
+      For transparent images (RGBA), it pastes onto a white background first rather than just converting, which preserves the visual appearance correctly.
+    </div>
+  </div>
+</div>
+
+<!-- OCR READER -->
+<div class="file-section" id="ocr">
+  <div class="file-header">
+    <div class="file-icon" style="background:rgba(59,130,246,0.12)">🔤</div>
+    <div>
+      <div class="file-title">ocr_reader.py</div>
+      <div class="file-path">NutriScanAI/utils/ocr_reader.py</div>
+    </div>
+    <span class="tag tag-util" style="margin-left:auto">UTIL</span>
+  </div>
+  <div class="file-desc">Wraps Tesseract OCR to extract text from food label images. Provides preprocessing, confidence scoring, and nutrition label detection.</div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">2</div>
+      <div class="line-code">pytesseract.pytesseract.tesseract_cmd = r'C:\Users\KUNAL\AppData\…\tesseract.exe'</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      <strong>Windows-specific Tesseract path.</strong> This line tells pytesseract where the Tesseract executable is installed on the developer's Windows machine.<br><br>
+      <div class="note note-warn">This is a hardcoded path and will break on any other machine. On Linux/Mac (e.g. production servers), Tesseract is found automatically via PATH. This line should be wrapped in an <code>if sys.platform == "win32":</code> check for cross-platform compatibility.</div>
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">8</div>
+      <div class="line-code">TESS_CONFIG = "--psm 6 --oem 3"</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Tesseract configuration flags:<br><br>
+      <code>--psm 6</code> — Page Segmentation Mode 6: treats the image as a uniform block of text. Good for structured nutrition tables.<br>
+      <code>--oem 3</code> — OCR Engine Mode 3: uses the LSTM neural network (most accurate modern engine).
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">33–44</div>
+      <div class="line-code">def is_nutrition_label(text) → bool: keywords = ["nutrition", "energy", …]; return matched >= 3</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      A heuristic check to determine if the OCR output looks like a nutrition label.<br><br>
+      Counts how many nutrition-related keywords appear in the extracted text. If 3 or more match, it's likely a nutrition label. This prevents the pipeline from trying to analyze random photos (a person's face, a landscape, etc.).
+    </div>
+  </div>
+</div>
+
+<!-- NUTRITION PARSER -->
+<div class="file-section" id="nutrition_parser">
+  <div class="file-header">
+    <div class="file-icon" style="background:rgba(59,130,246,0.12)">🧮</div>
+    <div>
+      <div class="file-title">nutrition_parser.py</div>
+      <div class="file-path">NutriScanAI/utils/nutrition_parser.py</div>
+    </div>
+    <span class="tag tag-util" style="margin-left:auto">UTIL</span>
+  </div>
+  <div class="file-desc">Extracts structured nutrition values from raw OCR text using regex patterns. Handles multiple label format variations and European comma decimals.</div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">8–43</div>
+      <div class="line-code">PATTERNS = {"energy_kcal": [r"energy[^\d]*(\d+…)kcal", …], "protein": […], …}</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      A dictionary of regex patterns for each nutrition field. Multiple patterns per field handle different label formats:<br><br>
+      <code>energy_kcal</code>: matches "Energy 250 kcal", "Calories 250", "250 kcal"<br>
+      <code>sodium</code>: matches "Sodium 420 mg" (in mg) or "Salt 1.05 g" (converts to sodium)<br>
+      <code>carbohydrates</code>: matches "Total Carbohydrate", "Carbohydrate", "Carbs"<br>
+      The first pattern that matches wins.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">45–70</div>
+      <div class="line-code">def parse_nutrition_from_text(ocr_text) → dict: … val.replace(",", ".") … float(val)</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      The main parsing function:<br>
+      1. Runs each field's regex patterns against the lowercased OCR text.<br>
+      2. Converts European decimal commas to dots (e.g. "2,5g" → "2.5g").<br>
+      3. Casts string values to floats.<br>
+      4. Also extracts the ingredients list (text after "Ingredients:") and attempts to guess the product name from the first readable non-nutritional line.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~105–115</div>
+      <div class="line-code">def nutrition_completeness_score(nutrition) → float: filled = sum(1 for f in key_fields if nutrition.get(f))</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Returns a 0.0–1.0 score representing how complete the extracted data is.<br><br>
+      Checks 6 key fields: energy_kcal, protein, total_fat, carbohydrates, sugar, sodium.<br>
+      If only 2 out of 6 are found → score = 0.33.<br>
+      Agent 1 uses this to warn users when the extraction is low-confidence.
+    </div>
+  </div>
+</div>
+
+<!-- IMAGE UTILS -->
+<div class="file-section" id="image_utils">
+  <div class="file-header">
+    <div class="file-icon" style="background:rgba(59,130,246,0.12)">🖼️</div>
+    <div>
+      <div class="file-title">image_utils.py</div>
+      <div class="file-path">NutriScanAI/utils/image_utils.py</div>
+    </div>
+    <span class="tag tag-util" style="margin-left:auto">UTIL</span>
+  </div>
+  <div class="file-desc">Utility functions for loading, resizing, and preprocessing images for both barcode detection and OCR.</div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">14–17</div>
+      <div class="line-code">def preprocess_for_ocr(image) → Image: greyscale → sharpen(2.5) → contrast(2.0) → UnsharpMask</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      A 4-step image enhancement pipeline optimized for reading text from printed food labels:<br><br>
+      <code>convert("L")</code> — converts to greyscale (removes color noise that confuses OCR).<br>
+      <code>Sharpness.enhance(2.5)</code> — sharpens edges (makes letter outlines crisper).<br>
+      <code>Contrast.enhance(2.0)</code> — doubles contrast (makes black text pop against white background).<br>
+      <code>UnsharpMask(radius=2, percent=150)</code> — additional edge enhancement to recover detail lost during compression.
+    </div>
+  </div>
+</div>
+
+<!-- ERROR HANDLER -->
+<div class="file-section" id="error_handler">
+  <div class="file-header">
+    <div class="file-icon" style="background:rgba(59,130,246,0.12)">🛡️</div>
+    <div>
+      <div class="file-title">error_handler.py</div>
+      <div class="file-path">NutriScanAI/utils/error_handler.py</div>
+    </div>
+    <span class="tag tag-util" style="margin-left:auto">UTIL</span>
+  </div>
+  <div class="file-desc">Provides crash protection for all agents and validation functions for images and pipeline health checking.</div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">5–20</div>
+      <div class="line-code">def safe_agent(agent_name): def decorator(fn): @functools.wraps(fn) def wrapper(state): try: return fn(state) except Exception as e: …</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      A <strong>decorator factory</strong> — a function that returns a decorator that wraps another function.<br><br>
+      Usage: <code>@safe_agent("Agent 1 (Intake)")</code> before any agent function.<br>
+      Effect: if the agent throws any exception, instead of crashing the whole pipeline, it:<br>
+      — Catches the exception<br>
+      — Appends a descriptive error message to <code>state["pipeline_errors"]</code><br>
+      — Returns the state unchanged so the next agent can still run<br>
+      <code>@functools.wraps(fn)</code> preserves the original function's name and docstring.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">23–33</div>
+      <div class="line-code">def validate_image_bytes(image_bytes) → tuple: jpg = image_bytes[:3] == b'\xff\xd8\xff'</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Validates uploaded images before sending them to the pipeline.<br><br>
+      Checks file size (must be ≥ 1000 bytes — anything smaller is probably corrupt).<br>
+      Checks the <strong>magic bytes</strong> — the first few bytes of every file that identify its format:<br>
+      <code>b'\xff\xd8\xff'</code> = JPEG file signature<br>
+      <code>b'\x89PNG\r\n\x1a\n'</code> = PNG file signature<br>
+      <code>b'WEBP'</code> (at bytes 8–12) = WebP file signature<br>
+      Returns a <code>(bool, message)</code> tuple — app.py uses this to show validation errors.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">45–80</div>
+      <div class="line-code">def check_pipeline_health(state) → dict: … status = "error" / "warning" / "ok"</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Inspects the final pipeline state after all agents have run and returns a health report.<br><br>
+      Checks each agent's expected output field to determine if it succeeded, failed, or was skipped.<br>
+      <code>"error"</code> — 2 or more agents failed (likely unusable results).<br>
+      <code>"warning"</code> — some issues but results may still be valid.<br>
+      <code>"ok"</code> — all agents completed successfully.<br>
+      app.py uses this to show yellow warning expanders or red error banners.
+    </div>
+  </div>
+</div>
+
+<!-- GOUPC CLIENT -->
+<div class="file-section" id="goupc">
+  <div class="file-header">
+    <div class="file-icon" style="background:rgba(59,130,246,0.12)">🏪</div>
+    <div>
+      <div class="file-title">goupc_client.py</div>
+      <div class="file-path">NutriScanAI/utils/goupc_client.py</div>
+    </div>
+    <span class="tag tag-util" style="margin-left:auto">UTIL</span>
+  </div>
+  <div class="file-desc">Client for the Go-UPC barcode lookup API. Returns product name, brand, and image URL. Uses a local JSON cache to preserve the free-tier 150 requests/month limit.</div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">20–35</div>
+      <div class="line-code">CACHE_FILE = Path("goupc_cache.json") / def _load_cache() / def _save_cache()</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      A simple file-based cache stored as a JSON file on disk.<br><br>
+      Before making any API call, <code>fetch_product_by_barcode()</code> checks this cache. If the barcode was looked up before, it returns the cached result immediately — no API call needed.<br>
+      After a successful API call, the result is written to the cache so future lookups are instant.<br>
+      <div class="note note-tip">This is important because Go-UPC only allows 150 requests/month on the free tier. Caching ensures the same product never counts twice toward that limit.</div>
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">38–75</div>
+      <div class="line-code">def fetch_product_by_barcode(barcode) → dict: r = requests.get(f"{BASE_URL}/{barcode}", headers={"Authorization": …})</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Makes a GET request to <code>https://go-upc.com/api/v1/code/{barcode}</code> with a Bearer token.<br><br>
+      Handles specific HTTP status codes:<br>
+      <code>404</code> — barcode not in database (returns None quietly).<br>
+      <code>429</code> — rate limit hit (logs warning, returns None).<br>
+      Other errors — logs the status code and returns None.<br>
+      Returns a standardized dict with <code>product_name</code>, <code>brands</code>, <code>image_url</code>, <code>description</code>.
+    </div>
+  </div>
+</div>
+
+<!-- MAILER -->
+<div class="file-section" id="mailer">
+  <div class="file-header">
+    <div class="file-icon" style="background:rgba(34,211,238,0.12)">📧</div>
+    <div>
+      <div class="file-title">mailer.py</div>
+      <div class="file-path">NutriScanAI/mailer.py — Gmail SMTP Email Sender</div>
+    </div>
+    <span class="tag tag-db" style="margin-left:auto">EMAIL</span>
+  </div>
+  <div class="file-desc">Sends HTML password reset emails via Gmail SMTP using App Passwords. Builds a beautifully styled HTML email with the NutriScan branding.</div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~75–105</div>
+      <div class="line-code">msg = MIMEMultipart("alternative"); msg.attach(MIMEText(plain, "plain")); msg.attach(MIMEText(html, "html"))</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Sends a <strong>multipart email</strong> with both HTML and plain text versions.<br><br>
+      <code>MIMEMultipart("alternative")</code> — creates an email container that holds multiple representations of the same content.<br>
+      Plain text is attached first, HTML second. Email clients show the last (HTML) version they support, and fall back to plain text on older clients.<br>
+      <code>smtplib.SMTP_SSL("smtp.gmail.com", 465)</code> — connects to Gmail's SMTP server over SSL on port 465 (more secure than STARTTLS).
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICATIONS -->
+<div class="file-section" id="notifications">
+  <div class="file-header">
+    <div class="file-icon" style="background:rgba(167,139,250,0.12)">🔔</div>
+    <div>
+      <div class="file-title">notifications.py</div>
+      <div class="file-path">NutriScanAI/notifications.py</div>
+    </div>
+    <span class="tag tag-ui" style="margin-left:auto">UI + EMAIL</span>
+  </div>
+  <div class="file-desc">Two notification systems: in-app colored toast cards shown after each scan, and an optional email digest that can be triggered from the sidebar.</div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">18–55</div>
+      <div class="line-code">def show_scan_toast(report_data): … st.markdown(f"&lt;div …&gt;{icon} {score}/10 — {msg}&lt;/div&gt;")</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Renders a styled notification card immediately after a scan completes.<br><br>
+      Maps the score to a color and icon:<br>
+      ≥8 → green ✓ "Great choice!" | ≥6 → blue ℹ "Decent option" | ≥4 → amber ⚠ "Consume in moderation" | &lt;4 → red ✕ "Consider a healthier alternative"<br>
+      The card is pure HTML injected via <code>st.markdown(unsafe_allow_html=True)</code>.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~130–155</div>
+      <div class="line-code">def render_notification_settings(): st.toggle("Email digest") … st.button("Send digest now")</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Renders a small notification preferences widget in the sidebar.<br><br>
+      Shows a toggle to enable email digests. If enabled, shows the target email address and a "Send digest now" button.<br>
+      The toggle state is stored in <code>st.session_state.notif_digest</code> — but note this is only in-memory (resets on page reload). A full implementation would persist this preference to the database.
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="file-section" id="dashboard">
+  <div class="file-header">
+    <div class="file-icon" style="background:rgba(167,139,250,0.12)">📊</div>
+    <div>
+      <div class="file-title">dashboard.py</div>
+      <div class="file-path">NutriScanAI/dashboard.py — Nutrition Trends Dashboard</div>
+    </div>
+    <span class="tag tag-ui" style="margin-left:auto">UI</span>
+  </div>
+  <div class="file-desc">A full-page analytics dashboard showing scan history statistics: score distribution bar chart, most-scanned products, recent scan history table, and average macro nutrients across all scans.</div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~60–75</div>
+      <div class="line-code">all_scans = load_scans(email, limit=50); scores = [s["score"] for s in all_scans if s["score"] is not None]</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Loads up to 50 scans from the database for analytics (vs. only 5 in the sidebar).<br><br>
+      Filters out scans with no score (<code>if s["score"] is not None</code>) before computing stats.<br>
+      Computes: average score, best score, worst score, count of AI-estimated results.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~80–110</div>
+      <div class="line-code">buckets = {"Excellent (8-10)": ("#27ae60", len([s for s in scores if s >= 8])), …}</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Builds the score distribution visualization.<br><br>
+      Groups all scores into 5 buckets (Excellent/Good/Moderate/Poor/Avoid).<br>
+      For each bucket, calculates a percentage and renders a custom HTML/CSS progress bar (since Streamlit's built-in progress bar doesn't support colors).<br>
+      Uses raw <code>st.markdown(f"&lt;div …&gt;&lt;/div&gt;")</code> for the bar charts.
+    </div>
+  </div>
+</div>
+
+<!-- PROFILE -->
+<div class="file-section" id="profile">
+  <div class="file-header">
+    <div class="file-icon" style="background:rgba(167,139,250,0.12)">✏️</div>
+    <div>
+      <div class="file-title">profile.py</div>
+      <div class="file-path">NutriScanAI/profile.py — User Profile Edit Page</div>
+    </div>
+    <span class="tag tag-ui" style="margin-left:auto">UI</span>
+  </div>
+  <div class="file-desc">A full-page profile editor where users can update their name, upload a profile photo, and change their password. Google SSO users see a "no password set" message instead of the password form.</div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">35–42</div>
+      <div class="line-code">def _avatar_b64_from_upload(uploaded) → str: data = base64.b64encode(uploaded.getvalue()).decode(); return f"data:{mime};base64,{data}"</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Converts an uploaded profile photo to a Base64 data URI.<br><br>
+      <code>uploaded.getvalue()</code> — reads the raw image bytes from the Streamlit file uploader.<br>
+      <code>base64.b64encode(…).decode()</code> — encodes to base64 string.<br>
+      The result is a self-contained image URL like <code>data:image/jpeg;base64,/9j/4AAQ…</code> that can be stored in the database and displayed directly in HTML without needing a file server.
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~125–145</div>
+      <div class="line-code">is_sso = not user_db.get("password_hash")</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Detects whether the user signed in via Google (SSO) or registered with email/password.<br><br>
+      Google users have <code>password_hash = NULL</code> in the database (set when <code>create_user(password=None)</code> is called).<br>
+      If <code>is_sso = True</code>, the "Change Password" card is replaced with an informational message explaining that Google accounts don't have a separate app password.
+    </div>
+  </div>
+</div>
+
+<!-- THEME.PY -->
+<div class="file-section" id="theme">
+  <div class="file-header">
+    <div class="file-icon" style="background:rgba(167,139,250,0.12)">🎨</div>
+    <div>
+      <div class="file-title">theme.py</div>
+      <div class="file-path">NutriScanAI/theme.py — Unified Theme</div>
+    </div>
+    <span class="tag tag-ui" style="margin-left:auto">UI</span>
+  </div>
+  <div class="file-desc">A centralized theme module that injects comprehensive CSS into the Streamlit app. Covers buttons, inputs, sidebar, alerts, progress bars, expanders, and all custom card classes. Supports dark/light mode toggle.</div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~10–50</div>
+      <div class="line-code">def inject_theme(dark: bool): if dark: bg="#0e0e0e"; … else: bg="#f7f9fc"; …</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Defines two complete color palettes (dark and light) as Python variables.<br><br>
+      Both palettes use the same <strong>green (#27ae60)</strong> as the primary accent, matching the auth page exactly for a consistent design language throughout the app.<br>
+      The variables are interpolated into the CSS f-string, so one function handles both themes with zero duplication.
+    </div>
+  </div>
+</div>
+
+<!-- REPORT EXPORTER -->
+<div class="file-section" id="exporter">
+  <div class="file-header">
+    <div class="file-icon" style="background:rgba(59,130,246,0.12)">📝</div>
+    <div>
+      <div class="file-title">report_exporter.py</div>
+      <div class="file-path">NutriScanAI/exports/report_exporter.py</div>
+    </div>
+    <span class="tag tag-util" style="margin-left:auto">EXPORT</span>
+  </div>
+  <div class="file-desc">Generates a formatted .docx Word document from the report data using the python-docx library. Returns raw bytes for Streamlit's download button.</div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">10–20</div>
+      <div class="line-code">def generate_docx(report_data, plain_text_report) → bytes: doc = Document(); … buffer = io.BytesIO(); doc.save(buffer); return buffer.getvalue()</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Creates a Word document entirely in memory (no file written to disk).<br><br>
+      <code>Document()</code> — creates a blank Word document.<br>
+      Adds sections: title, product info, health score, nutrition table (formatted as a <code>doc.add_table()</code>), red flags, positives, personalized insights, allergens, narrative summary, disclaimer.<br>
+      <code>io.BytesIO()</code> — creates an in-memory file buffer.<br>
+      <code>doc.save(buffer)</code> — writes the DOCX to the buffer.<br>
+      <code>buffer.getvalue()</code> — returns all the bytes, which <code>st.download_button()</code> sends to the user's browser.
+    </div>
+  </div>
+</div>
+
+<!-- FOOD FACTS CLIENT -->
+<div class="file-section" id="foodfacts">
+  <div class="file-header">
+    <div class="file-icon" style="background:rgba(59,130,246,0.12)">🥗</div>
+    <div>
+      <div class="file-title">food_facts_client.py</div>
+      <div class="file-path">NutriScanAI/utils/food_facts_client.py</div>
+    </div>
+    <span class="tag tag-util" style="margin-left:auto">UTIL</span>
+  </div>
+  <div class="file-desc">Wrapper around the Open Food Facts SDK. Fetches product data by barcode and extracts the nutrition fields needed by the pipeline. (Note: This module exists but the current pipeline uses Go-UPC + LLM instead.)</div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">5–13</div>
+      <div class="line-code">def get_off_api() → API: return API(user_agent="NutriScan/1.0", country=Country["in"], flavor=Flavor.off, …)</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      Creates an Open Food Facts API client configured for the Indian market.<br><br>
+      <code>country=Country["in"]</code> — biases results toward Indian products.<br>
+      <code>flavor=Flavor.off</code> — uses the Open Food Facts database (as opposed to Open Pet Food Facts, Open Beauty Facts, etc.).<br>
+      <code>Environment.org</code> — uses the production server (not the sandbox/test server).
+    </div>
+  </div>
+</div>
+
+<!-- DB VIEWER -->
+<div class="file-section" id="dbviewer">
+  <div class="file-header">
+    <div class="file-icon" style="background:rgba(34,211,238,0.12)">🛢️</div>
+    <div>
+      <div class="file-title">db_viewer.py</div>
+      <div class="file-path">NutriScanAI/db_viewer.py — Developer Database Viewer</div>
+    </div>
+    <span class="tag tag-db" style="margin-left:auto">DEV TOOL</span>
+  </div>
+  <div class="file-desc">A separate Streamlit app (run independently with <code>streamlit run db_viewer.py</code>) for developers to inspect and manage the database. Password-protected. Has tabs for Users, Scan History, and a raw SQL console.</div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">25–40</div>
+      <div class="line-code">DEV_PASSWORD = "nutriscan_dev"; if not st.session_state.dev_auth: pw = st.text_input(…)</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      A simple password gate protects the dev viewer from unauthorized access.<br><br>
+      <div class="note note-warn">This is a hardcoded plaintext password — fine for a local dev tool but never deploy this to production without proper authentication.</div>
+    </div>
+  </div>
+
+  <div class="line-entry" onclick="toggle(this)">
+    <div class="line-header">
+      <div class="line-nums">~175–195</div>
+      <div class="line-code">if not stripped.startswith("SELECT"): st.error("Only SELECT queries are allowed here.")</div>
+      <div class="line-chevron">▶</div>
+    </div>
+    <div class="line-body">
+      The raw SQL console blocks any non-SELECT queries to prevent accidental data destruction.<br><br>
+      Checks if the trimmed, uppercased query starts with "SELECT". If not, shows an error and refuses to execute.<br>
+      <div class="note note-info">This is a basic safety check — a sophisticated attacker could still inject harmful SQL with tricks like <code>SELECT 1; DROP TABLE users</code>, but it prevents accidental mistakes.</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end main-inner -->
+</div><!-- end main -->
+
+<button id="back-top" onclick="document.getElementById('main').scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+function toggle(el) {
+  el.classList.toggle('open');
+}
+
+function scrollTo(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  // Update active nav
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const allNavItems = document.querySelectorAll('.nav-item');
+  allNavItems.forEach(n => {
+    if (n.getAttribute('onclick') && n.getAttribute('onclick').includes("'" + id + "'")) {
+      n.classList.add('active');
+    }
+  });
+}
+
+function filterNav(q) {
+  const items = document.querySelectorAll('.nav-item');
+  const lower = q.toLowerCase();
+  items.forEach(item => {
+    const label = (item.getAttribute('data-label') || '') + item.textContent;
+    item.classList.toggle('hidden', lower && !label.toLowerCase().includes(lower));
+  });
+}
+
+// Progress bar + back to top
+const mainEl = document.getElementById('main');
+const progressEl = document.getElementById('progress');
+const backTopEl = document.getElementById('back-top');
+
+mainEl.addEventListener('scroll', () => {
+  const scrolled = mainEl.scrollTop;
+  const total = mainEl.scrollHeight - mainEl.clientHeight;
+  const pct = total ? scrolled / total : 0;
+  progressEl.style.transform = `scaleX(${pct})`;
+  backTopEl.classList.toggle('visible', scrolled > 300);
+
+  // Update sidebar active on scroll
+  const sections = document.querySelectorAll('.file-section');
+  let current = '';
+  sections.forEach(s => {
+    const top = s.getBoundingClientRect().top - mainEl.getBoundingClientRect().top;
+    if (top < 150) current = s.id;
+  });
+  if (current) {
+    document.querySelectorAll('.nav-item').forEach(n => {
+      const onclick = n.getAttribute('onclick') || '';
+      n.classList.toggle('active', onclick.includes("'" + current + "'"));
+    });
+  }
+});
+</script>
+</body>
+</html>
