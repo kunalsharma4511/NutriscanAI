@@ -35,4 +35,4 @@ nutriscan/
 ├── exports/
 │   └── report_exporter.py        # DOCX / PDF report export (Phase 5)
 ├── requirements.txt
-└── env.example
+└── env.example 
